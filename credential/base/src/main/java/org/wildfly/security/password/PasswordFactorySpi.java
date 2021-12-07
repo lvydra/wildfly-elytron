@@ -18,6 +18,8 @@
 
 package org.wildfly.security.password;
 
+import org.wildfly.security.password.spec.EncryptablePasswordSpec;
+
 import java.nio.charset.Charset;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -128,4 +130,6 @@ public abstract class PasswordFactorySpi {
      * @throws InvalidAlgorithmParameterException if the transformation cannot be applied to the given parameters
      */
     protected abstract Password engineTransform(String algorithm, Password password, AlgorithmParameterSpec parameterSpec) throws InvalidKeyException, InvalidAlgorithmParameterException;
+
+    protected abstract Password engineTransform(String algorithm, Password password, EncryptablePasswordSpec passwordSpec) throws InvalidKeyException, InvalidAlgorithmParameterException;
 }

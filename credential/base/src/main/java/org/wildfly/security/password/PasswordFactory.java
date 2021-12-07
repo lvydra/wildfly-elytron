@@ -34,6 +34,7 @@ import java.security.spec.KeySpec;
 import java.util.function.Supplier;
 
 import org.wildfly.common.Assert;
+import org.wildfly.security.password.spec.EncryptablePasswordSpec;
 
 /**
  * A factory for passwords.
@@ -236,5 +237,9 @@ public final class PasswordFactory {
      */
     public Password transform(Password password, AlgorithmParameterSpec parameterSpec) throws InvalidKeyException, InvalidAlgorithmParameterException {
         return spi.engineTransform(algorithm, password, parameterSpec);
+    }
+
+    public Password transform(Password password, EncryptablePasswordSpec passwordSpec) throws InvalidKeyException, InvalidAlgorithmParameterException {
+        return spi.engineTransform(algorithm, password, passwordSpec);
     }
 }

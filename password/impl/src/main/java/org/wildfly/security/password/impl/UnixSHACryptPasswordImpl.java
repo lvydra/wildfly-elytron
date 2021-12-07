@@ -28,14 +28,18 @@ import java.io.ObjectInputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.spec.AlgorithmParameterSpec;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 import java.util.Arrays;
 
 import org.wildfly.common.Assert;
+import org.wildfly.security.password.Password;
+import org.wildfly.security.password.spec.EncryptablePasswordSpec;
 import org.wildfly.security.password.spec.IteratedPasswordAlgorithmSpec;
 import org.wildfly.security.password.spec.SaltedPasswordAlgorithmSpec;
 import org.wildfly.security.password.interfaces.UnixSHACryptPassword;
@@ -143,6 +147,33 @@ final class UnixSHACryptPasswordImpl extends AbstractPasswordImpl implements Uni
     }
 
     @Override
+    Password translate(final EncryptablePasswordSpec passwordSpec) throws InvalidKeyException, InvalidAlgorithmParameterException {
+        AlgorithmParameterSpec parameterSpec = passwordSpec.getAlgorithmParameterSpec();
+        if (parameterSpec instanceof IteratedSaltedPasswordAlgorithmSpec) {
+            IteratedSaltedPasswordAlgorithmSpec updateSpec = (IteratedSaltedPasswordAlgorithmSpec) parameterSpec;
+            int updateIterationCount = updateSpec.getIterationCount();
+            if (updateIterationCount < this.iterationCount) {
+                throw new InvalidAlgorithmParameterException();
+            }
+            if (updateIterationCount == this.iterationCount) {
+                return this;
+            }
+            byte[] currentDigest = this.hash.clone();
+            try {
+                byte[] password = getNormalizedPasswordBytes(passwordSpec.getPassword(), passwordSpec.getHashCharset());
+                byte[] digestAC = getDigestA(algorithm, password, salt);
+                byte[] sequenceP = getSequenceP(algorithm, password);
+                byte[] sequenceS = getSequenceS(algorithm, digestAC, salt);
+                currentDigest = addIterations(currentDigest, algorithm, sequenceP, sequenceS, this.iterationCount, updateIterationCount);
+            } catch (NoSuchAlgorithmException e) {
+                throw new InvalidKeyException(e);
+            }
+            return new UnixSHACryptPasswordImpl(algorithm, salt, updateIterationCount, currentDigest);
+        }
+        throw new InvalidAlgorithmParameterException();
+    }
+
+    @Override
     boolean verify(final char[] guess) throws InvalidKeyException {
         return verify(guess, StandardCharsets.UTF_8);
     }
@@ -173,7 +204,14 @@ final class UnixSHACryptPasswordImpl extends AbstractPasswordImpl implements Uni
         byte[] digestAC = getDigestA(algorithm, password, salt); // at this point, digestAC is "A"
         byte[] sequenceP = getSequenceP(algorithm, password);
         byte[] sequenceS = getSequenceS(algorithm, digestAC, salt);
-        for (int i = 0 ; i < iterationCount; i++) {
+
+        digestAC = addIterations(digestAC, algorithm, sequenceP, sequenceS, 0, iterationCount);
+        return digestAC;
+    }
+
+    static byte[] addIterations(final byte[] digestAC, final String algorithm, final byte[] sequenceP, final byte[] sequenceS, final int currentIterationCount, final int newIterationCount) throws NoSuchAlgorithmException {
+        byte[] currentDigestAC = digestAC;
+        for (int i = currentIterationCount ; i < newIterationCount; i++) {
             // 21. repeat a loop according to the number specified in the rounds=<N>
             // specification in the salt (or the default value if none is
             // present).  Each round is numbered, starting with 0 and up to N-1.
@@ -182,11 +220,10 @@ final class UnixSHACryptPasswordImpl extends AbstractPasswordImpl implements Uni
             // digest produced in step 12.  In the latter steps it is the digest
             // produced in step 21.h.  The following text uses the notation
             // "digest A/C" to describe this behavior.
-            digestAC = getDigestC(algorithm, digestAC, sequenceP, sequenceS, i);
+            currentDigestAC = getDigestC(algorithm, currentDigestAC, sequenceP, sequenceS, i);
             // implementation note: at this point, digestAC is "C"
         }
-
-        return digestAC;
+        return currentDigestAC;
     }
 
     /**

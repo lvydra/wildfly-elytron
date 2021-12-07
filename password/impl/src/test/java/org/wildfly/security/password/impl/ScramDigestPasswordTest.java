@@ -18,6 +18,8 @@
 
 package org.wildfly.security.password.impl;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -39,6 +41,7 @@ import org.wildfly.common.iteration.CodePointIterator;
 import org.wildfly.security.password.WildFlyElytronPasswordProvider;
 import org.wildfly.security.password.PasswordFactory;
 import org.wildfly.security.password.interfaces.ScramDigestPassword;
+import org.wildfly.security.password.interfaces.UnixSHACryptPassword;
 import org.wildfly.security.password.spec.EncryptablePasswordSpec;
 import org.wildfly.security.password.spec.IteratedSaltedPasswordAlgorithmSpec;
 import org.wildfly.security.password.spec.IteratedSaltedHashPasswordSpec;
@@ -189,6 +192,34 @@ public class ScramDigestPasswordTest {
         assertTrue("Digest correctly generated", Arrays.equals(decodedDigest, sdp.getDigest()));
         assertTrue("Password validation", factory.verify(sdp, password));
         assertFalse("Bad password rejection", factory.verify(sdp, "badpassword".toCharArray()));
+    }
+
+    @Test
+    public void testTranslateFunctionality() throws Exception {
+        String password = "test_password";
+        String salt = "saltstring";
+        int iterationCount = 1200;
+        int updatedIterationCount = 1300;
+
+        IteratedSaltedPasswordAlgorithmSpec algorithmSpec = new IteratedSaltedPasswordAlgorithmSpec(iterationCount, salt.getBytes(UTF_8));
+        IteratedSaltedPasswordAlgorithmSpec updatedIterationAlgorithmSpec = new IteratedSaltedPasswordAlgorithmSpec(updatedIterationCount, salt.getBytes(UTF_8));
+
+        PasswordFactory passwordFactory = PasswordFactory.getInstance(ALGORITHM_SCRAM_SHA_256);
+
+        EncryptablePasswordSpec encryptableSpec = new EncryptablePasswordSpec(password.toCharArray(), algorithmSpec);
+        ScramDigestPassword unixSHACryptPassword = (ScramDigestPassword) passwordFactory.generatePassword(encryptableSpec);
+
+        assertArrayEquals("Salt correctly passed", salt.getBytes(UTF_8), unixSHACryptPassword.getSalt());
+        assertEquals("Iteration count correctly passed", iterationCount, unixSHACryptPassword.getIterationCount());
+
+        encryptableSpec = new EncryptablePasswordSpec(password.toCharArray(), updatedIterationAlgorithmSpec);
+        ScramDigestPassword unixSHACryptPasswordUpdatedSequence = (ScramDigestPassword) passwordFactory.generatePassword(encryptableSpec);
+        ScramDigestPassword unixSHACryptPasswordTranslated = (ScramDigestPassword) passwordFactory.transform(unixSHACryptPassword, updatedIterationAlgorithmSpec);
+
+        //assertArrayEquals("Hashes should be same", unixSHACryptPasswordUpdatedSequence.getDigest(), unixSHACryptPasswordTranslated.getDigest());
+
+        assertTrue("Password validation", passwordFactory.verify(unixSHACryptPasswordUpdatedSequence, password.toCharArray()));
+        assertTrue("Password validation", passwordFactory.verify(unixSHACryptPasswordTranslated, password.toCharArray()));
     }
 
 }

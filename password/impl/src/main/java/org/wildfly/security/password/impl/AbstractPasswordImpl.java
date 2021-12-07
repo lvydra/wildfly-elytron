@@ -28,6 +28,7 @@ import java.security.spec.KeySpec;
 import java.text.Normalizer;
 
 import org.wildfly.security.password.Password;
+import org.wildfly.security.password.spec.EncryptablePasswordSpec;
 
 /**
  * @author <a href="mailto:david.lloyd@redhat.com">David M. Lloyd</a>
@@ -49,6 +50,10 @@ abstract class AbstractPasswordImpl implements Password {
     public abstract AbstractPasswordImpl clone();
 
     Password translate(final AlgorithmParameterSpec parameterSpec) throws InvalidKeyException, InvalidAlgorithmParameterException {
+        throw new InvalidAlgorithmParameterException();
+    }
+
+    Password translate(final EncryptablePasswordSpec passwordSpec) throws InvalidKeyException, InvalidAlgorithmParameterException {
         throw new InvalidAlgorithmParameterException();
     }
 

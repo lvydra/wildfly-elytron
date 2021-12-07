@@ -815,4 +815,15 @@ public final class PasswordFactorySpiImpl extends PasswordFactorySpi {
         }
         throw new InvalidKeyException();
     }
+
+    @Override
+    protected Password engineTransform(final String algorithm, final Password password, final EncryptablePasswordSpec passwordSpec) throws InvalidKeyException, InvalidAlgorithmParameterException {
+        if (password instanceof AbstractPasswordImpl) {
+            final AbstractPasswordImpl abstractPassword = (AbstractPasswordImpl) password;
+            if (algorithm.equals(abstractPassword.getAlgorithm())) {
+                return abstractPassword.translate(passwordSpec);
+            }
+        }
+        throw new InvalidKeyException();
+    }
 }
