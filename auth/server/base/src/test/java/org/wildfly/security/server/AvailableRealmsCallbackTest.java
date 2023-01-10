@@ -1,0 +1,57 @@
+/*
+ * JBoss, Home of Professional Open Source.
+ * Copyright 2023 Red Hat, Inc., and individual contributors
+ * as indicated by the @author tags.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS,
+ *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ */
+
+package org.wildfly.security.server;
+
+import org.junit.Test;
+import org.wildfly.security.auth.server.MechanismConfiguration;
+import org.wildfly.security.auth.server.MechanismConfigurationSelector;
+import org.wildfly.security.auth.server.SecurityDomain;
+import org.wildfly.security.auth.server.ServerAuthenticationContext;
+
+import java.io.IOException;
+
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+public class AvailableRealmsCallbackTest {
+
+    @Test
+    public void testNullMechanismConfigurationSelector() {
+        SecurityDomain securityDomain = SecurityDomain.builder().build();
+
+        try {
+            ServerAuthenticationContext sac = securityDomain.createNewAuthenticationContext(null);
+            fail("The exception should be thrown.");
+        } catch (Exception e) {
+            String expectedMessage = "Parameter 'mechanismConfigurationSelector' may not be null";
+            String actualMessage = e.getMessage();
+
+            assertTrue(actualMessage.contains(expectedMessage));
+        }
+    }
+
+    @Test
+    public void testEmptyMechanismConfiguration() throws IOException {
+        SecurityDomain securityDomain = SecurityDomain.builder().build();
+        MechanismConfigurationSelector mechanismConfigurationSelector = MechanismConfigurationSelector.constantSelector(MechanismConfiguration.EMPTY);
+        ServerAuthenticationContext sac = securityDomain.createNewAuthenticationContext(mechanismConfigurationSelector);
+        sac.setAuthenticationName("user");
+    }
+}
+

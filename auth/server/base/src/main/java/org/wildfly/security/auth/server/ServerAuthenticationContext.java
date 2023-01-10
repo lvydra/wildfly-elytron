@@ -1376,7 +1376,7 @@ public final class ServerAuthenticationContext implements AutoCloseable {
         public InactiveState(SecurityIdentity capturedIdentity, MechanismConfigurationSelector mechanismConfigurationSelector,
                 MechanismInformation mechanismInformation, IdentityCredentials privateCredentials, IdentityCredentials publicCredentials, Attributes runtimeAttributes) {
             this.capturedIdentity = capturedIdentity;
-            this.mechanismConfigurationSelector = mechanismConfigurationSelector;
+            this.mechanismConfigurationSelector = checkNotNullParam("mechanismConfigurationSelector", mechanismConfigurationSelector);
             this.mechanismInformation = checkNotNullParam("mechanismInformation", mechanismInformation);
             this.privateCredentials = privateCredentials;
             this.publicCredentials = publicCredentials;
