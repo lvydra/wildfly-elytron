@@ -65,7 +65,7 @@
         <version.org.apache.directory.api>1.0.0</version.org.apache.directory.api>
         <version.org.apache.directory.jdbm>2.0.0-M3</version.org.apache.directory.jdbm>
         <version.org.apache.directory.mavibot>1.0.0-M8</version.org.apache.directory.mavibot>
-        <version.org.bouncycastle>1.67</version.org.bouncycastle>
+        <version.org.bouncycastle>1.71</version.org.bouncycastle>
         <version.org.apache.sshd.common>2.10.0</version.org.apache.sshd.common>
         <version.org.apache.httpcomponents.httpclient>4.5.14</version.org.apache.httpcomponents.httpclient>
         <version.org.apache.httpcomponents.httpcore>4.4.16</version.org.apache.httpcomponents.httpcore>
@@ -1089,7 +1089,7 @@
                     </exclusion>
                     <exclusion>
                         <groupId>org.bouncycastle</groupId>
-                        <artifactId>bcprov-jdk15on</artifactId>
+                        <artifactId>bcprov-jdk18on</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -1142,7 +1142,25 @@
             </dependency>
             <dependency>
                 <groupId>org.bouncycastle</groupId>
-                <artifactId>bcmail-jdk15on</artifactId>
+                <artifactId>bcmail-jdk18on</artifactId>
+                <version>${version.org.bouncycastle}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcpkix-jdk18on</artifactId>
+                <version>${version.org.bouncycastle}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcprov-jdk18on</artifactId>
+                <version>${version.org.bouncycastle}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcutil-jdk18on</artifactId>
                 <version>${version.org.bouncycastle}</version>
                 <scope>test</scope>
             </dependency>
